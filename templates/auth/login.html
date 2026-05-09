@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Best ToDo</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <script src="{{ url_for('static', path='auth.js') }}" defer></script>
+</head>
+<body>
+    <main class="auth-shell">
+        <section class="auth-intro" aria-label="О приложении">
+            <div class="brand">
+                <span class="brand-mark">✓</span>
+                <span>Best ToDo</span>
+            </div>
+            <h1>Верни порядок в свои задачи.</h1>
+            <p>Личный список дел с быстрым входом, понятной регистрацией и спокойным интерфейсом без лишнего шума.</p>
+            <ul class="feature-list">
+                <li><span>1</span>Создавайте задачи и держите фокус на главном</li>
+                <li><span>2</span>Вход через защищенную cookie-сессию</li>
+                <li><span>3</span>Аккаунт готов за пару секунд</li>
+            </ul>
+        </section>
+
+        <section class="auth-card" aria-label="Форма входа">
+            <header>
+                <h2>Вход</h2>
+                <p>Используйте email и пароль, которые указали при регистрации.</p>
+            </header>
+
+            <form data-auth-form data-mode="login" autocomplete="on">
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="username" placeholder="you@example.com" autocomplete="email" required>
+                </div>
+
+                <div class="field">
+                    <label for="password">Пароль</label>
+                    <input id="password" type="password" name="password" placeholder="Ваш пароль" autocomplete="current-password" required>
+                </div>
+
+                <button class="auth-button" type="submit">Войти</button>
+            </form>
+
+            <div class="message" data-auth-message role="status" aria-live="polite"></div>
+
+            <p class="auth-switch">
+                Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

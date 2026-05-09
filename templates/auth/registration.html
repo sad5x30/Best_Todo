@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | Best ToDo</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <script src="{{ url_for('static', path='auth.js') }}" defer></script>
+</head>
+<body>
+    <main class="auth-shell">
+        <section class="auth-intro" aria-label="О приложении">
+            <div class="brand">
+                <span class="brand-mark">✓</span>
+                <span>Best ToDo</span>
+            </div>
+            <h1>Начните с чистого списка.</h1>
+            <p>Создайте аккаунт, чтобы сохранять задачи, возвращаться к ним позже и не держать все планы в голове.</p>
+            <ul class="feature-list">
+                <li><span>1</span>Уникальный username для вашего профиля</li>
+                <li><span>2</span>Email используется для входа</li>
+                <li><span>3</span>После регистрации можно сразу войти</li>
+            </ul>
+        </section>
+
+        <section class="auth-card" aria-label="Форма регистрации">
+            <header>
+                <h2>Регистрация</h2>
+                <p>Заполните три поля, и аккаунт будет готов.</p>
+            </header>
+
+            <form data-auth-form data-mode="register" autocomplete="on">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" placeholder="best_user" autocomplete="username" minlength="3" required>
+                </div>
+
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                </div>
+
+                <div class="field">
+                    <label for="password">Пароль</label>
+                    <input id="password" type="password" name="password" placeholder="Минимум 8 символов" autocomplete="new-password" minlength="8" required>
+                </div>
+
+                <button class="auth-button" type="submit">Создать аккаунт</button>
+            </form>
+
+            <div class="message" data-auth-message role="status" aria-live="polite"></div>
+
+            <p class="auth-switch">
+                Уже есть аккаунт? <a href="/login">Войти</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best ToDo</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+    <header class="home-header">
+        <nav class="home-nav">
+            <div class="brand-name">Best ToDo</div>
+            <a class="button-link primary" href="/login">Войти</a>
+            <a class="button-link" href="/register">Регистрация</a>
+        </nav>
+    </header>
+
+    <main class="home-shell">
+        <section class="home-panel">
+            <div class="brand">
+                <span class="brand-mark">✓</span>
+                <span>Best ToDo</span>
+            </div>
+            <h1>Твои задачи, без суеты.</h1>
+            <p>Фронт для входа и регистрации уже подключен. Дальше сюда можно добавить личный кабинет со списком задач.</p>
+            <div class="home-actions">
+                <a class="button-link primary" href="/login">Войти</a>
+                <a class="button-link" href="/register">Создать аккаунт</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
