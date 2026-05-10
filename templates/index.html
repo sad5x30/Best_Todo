@@ -61,12 +61,30 @@
                     <p class="eyebrow">Чтение</p>
                     <h2>Мои задачи</h2>
                 </div>
-                <span class="task-count">{{ tasks|length }} всего</span>
+                <span class="task-count">{{ tasks|length }} показано</span>
+            </div>
+
+            <div class="task-filters" aria-label="Фильтры задач">
+                <div class="filter-group">
+                    <span>Приоритет</span>
+                    <a class="{% if active_priority == 'all' %}is-active{% endif %}" href="/?priority=all&status={{ active_status }}">Все</a>
+                    <a class="priority-low {% if active_priority == 'low' %}is-active{% endif %}" href="/?priority=low&status={{ active_status }}">Низкий</a>
+                    <a class="priority-medium {% if active_priority == 'medium' %}is-active{% endif %}" href="/?priority=medium&status={{ active_status }}">Средний</a>
+                    <a class="priority-high {% if active_priority == 'high' %}is-active{% endif %}" href="/?priority=high&status={{ active_status }}">Высокий</a>
+                </div>
+
+                <div class="filter-group">
+                    <span>Статус</span>
+                    <a class="{% if active_status == 'all' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=all">Все</a>
+                    <a class="{% if active_status == 'active' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=active">Не выполнены</a>
+                    <a class="{% if active_status == 'done' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=done">Выполнены</a>
+                </div>
             </div>
 
             {% if tasks %}
             <div class="task-list">
                 {% for task in tasks %}
+                {% set task_priority = task.priority or 'medium' %}
                 <article class="task-card {% if task.is_done %}is-done{% endif %}">
                     <form action="/tasks/{{ task.id }}/toggle" method="post" class="task-check-form">
                         <button class="task-check" type="submit" aria-label="Сменить статус">
@@ -75,11 +93,35 @@
                     </form>
 
                     <div class="task-content">
-                        <h3>{{ task.title }}</h3>
+                        <div class="task-title-row">
+                            <h3>{{ task.title }}</h3>
+                            <div class="task-meta-row">
+                                <span class="priority-label priority-{{ task_priority }}">
+                                    {{ priority_labels.get(task_priority, "Средний") }}
+                                </span>
+                                {% if task.created_at %}
+                                {% set created_date = task.created_at.strftime("%Y-%m-%d") %}
+                                <time class="task-date" datetime="{{ created_date }}">
+                                    Создано: {{ created_date }}
+                                </time>
+                                {% endif %}
+                                {% if task.updated_at and task.created_at and task.updated_at.strftime("%Y-%m-%d %H:%M:%S") > task.created_at.strftime("%Y-%m-%d %H:%M:%S") %}
+                                {% set updated_date = task.updated_at.strftime("%Y-%m-%d") %}
+                                <time class="task-date" datetime="{{ updated_date }}">
+                                    Изменено: {{ updated_date }}
+                                </time>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% if task.description %}
                         <p>{{ task.description }}</p>
                         {% else %}
                         <p class="empty-description">Без описания</p>
+                        {% endif %}
+                        {% if task.deadline %}
+                        <time class="task-deadline" datetime="{{ task.deadline.isoformat() }}">
+                            Дедлайн: {{ task.deadline.strftime("%Y-%m-%d") }}
+                        </time>
                         {% endif %}
                     </div>
 
@@ -92,6 +134,8 @@
                             data-task-title="{{ task.title }}"
                             data-task-description="{{ task.description or '' }}"
                             data-task-done="{{ 'true' if task.is_done else 'false' }}"
+                            data-task-priority="{{ task_priority }}"
+                            data-task-deadline="{{ task.deadline.isoformat() if task.deadline else '' }}"
                         >
                             Изменить
                         </button>
@@ -105,7 +149,7 @@
             {% else %}
             <div class="empty-state">
                 <h3>Пока пусто</h3>
-                <p>Создай первую задачу через кнопку ниже или через нижнюю навигацию.</p>
+                <p>Здесь нет задач под выбранные фильтры. Можно сбросить фильтр или добавить новую задачу.</p>
                 <button class="button-link primary" type="button" data-open-task-modal>Добавить задачу</button>
             </div>
             {% endif %}
@@ -118,8 +162,8 @@
                 <p>{{ user.email }}</p>
             </div>
             <div class="profile-stats">
-                <span>{{ tasks|selectattr("is_done")|list|length }} готово</span>
-                <span>{{ tasks|rejectattr("is_done")|list|length }} в работе</span>
+                <span>{{ all_tasks|selectattr("is_done")|list|length }} готово</span>
+                <span>{{ all_tasks|rejectattr("is_done")|list|length }} в работе</span>
             </div>
         </section>
         {% endif %}
@@ -148,6 +192,29 @@
             <div class="field">
                 <label for="task-description">Описание</label>
                 <textarea id="task-description" name="description" placeholder="Коротко опиши, что нужно сделать"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="task-deadline">Дедлайн</label>
+                <input id="task-deadline" name="deadline" type="date" placeholder="гггг-мм-дд">
+            </div>
+
+            <div class="field">
+                <span class="field-label">Приоритет</span>
+                <div class="priority-picker" role="radiogroup" aria-label="Приоритет задачи">
+                    <label class="priority-option priority-low">
+                        <input type="radio" name="priority" value="low" data-priority-input>
+                        <span>Low</span>
+                    </label>
+                    <label class="priority-option priority-medium">
+                        <input type="radio" name="priority" value="medium" data-priority-input checked>
+                        <span>Medium</span>
+                    </label>
+                    <label class="priority-option priority-high">
+                        <input type="radio" name="priority" value="high" data-priority-input>
+                        <span>High</span>
+                    </label>
+                </div>
             </div>
 
             <label class="done-toggle">

@@ -1,6 +1,7 @@
+from datetime import date, datetime
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -22,6 +23,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
 current_user = fastapi_users.current_user(optional=True)
 current_active_user = fastapi_users.current_user()
+
+TASK_PRIORITIES = {"low", "medium", "high"}
+TASK_PRIORITY_LABELS = {
+    "low": "Низкий",
+    "medium": "Средний",
+    "high": "Высокий",
+}
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
@@ -46,23 +54,48 @@ async def logout():
 @app.get("/", response_class=HTMLResponse)
 async def home(
     request: Request,
+    priority: str = Query("all"),
+    status_filter: str = Query("all", alias="status"),
     user: Optional[User] = Depends(current_user),
     session: AsyncSession = Depends(get_db),
 ):
     tasks = []
+    all_tasks = []
+    active_priority = priority if priority in TASK_PRIORITIES else "all"
+    active_status = status_filter if status_filter in {"done", "active"} else "all"
 
     if user:
+        all_result = await session.execute(
+            select(Task).where(Task.user_id == user.id)
+        )
+        all_tasks = all_result.scalars().all()
+
+        query = select(Task).where(Task.user_id == user.id)
+
+        if active_priority != "all":
+            query = query.where(Task.priority == active_priority)
+
+        if active_status == "done":
+            query = query.where(Task.is_done.is_(True))
+        elif active_status == "active":
+            query = query.where(Task.is_done.is_(False))
+
         result = await session.execute(
-            select(Task)
-            .where(Task.user_id == user.id)
-            .order_by(Task.is_done.asc(), Task.updated_at.desc())
+            query.order_by(Task.is_done.asc(), Task.updated_at.desc())
         )
         tasks = result.scalars().all()
 
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"user": user, "tasks": tasks},
+        {
+            "user": user,
+            "tasks": tasks,
+            "all_tasks": all_tasks,
+            "active_priority": active_priority,
+            "active_status": active_status,
+            "priority_labels": TASK_PRIORITY_LABELS,
+        },
     )
 
 
@@ -86,13 +119,19 @@ async def get_owned_task(
 async def create_task(
     title: str = Form(...),
     description: str = Form(""),
+    priority: str = Form("medium"),
+    deadline: Optional[date] = Form(None),
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_db),
 ):
+    task_priority = priority if priority in TASK_PRIORITIES else "medium"
+
     session.add(
         Task(
             title=title.strip(),
             description=description.strip() or None,
+            priority=task_priority,
+            deadline=deadline,
             user_id=user.id,
         )
     )
@@ -105,6 +144,8 @@ async def update_task(
     task_id: int,
     title: str = Form(...),
     description: str = Form(""),
+    priority: str = Form("medium"),
+    deadline: Optional[date] = Form(None),
     is_done: bool = Form(False),
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_db),
@@ -112,7 +153,10 @@ async def update_task(
     task = await get_owned_task(task_id, user, session)
     task.title = title.strip()
     task.description = description.strip() or None
+    task.priority = priority if priority in TASK_PRIORITIES else "medium"
+    task.deadline = deadline
     task.is_done = is_done
+    task.updated_at = datetime.utcnow()
 
     await session.commit()
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
@@ -126,6 +170,7 @@ async def toggle_task(
 ):
     task = await get_owned_task(task_id, user, session)
     task.is_done = not task.is_done
+    task.updated_at = datetime.utcnow()
 
     await session.commit()
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)

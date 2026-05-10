@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from datetime import datetime
@@ -10,6 +10,8 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True, nullable=False)
     description = Column(String, index=True)
+    priority = Column(String, default="medium", nullable=False)
+    deadline = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     is_done = Column(Boolean, default=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

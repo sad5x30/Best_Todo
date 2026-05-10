@@ -4,7 +4,17 @@ const modalTitle = document.querySelector("[data-modal-title]");
 const modalSubmit = document.querySelector("[data-modal-submit]");
 const titleInput = document.querySelector("#task-title");
 const descriptionInput = document.querySelector("#task-description");
+const deadlineInput = document.querySelector("#task-deadline");
 const doneInput = document.querySelector("[data-done-input]");
+const priorityInputs = document.querySelectorAll("[data-priority-input]");
+
+function setPriority(priority) {
+    const nextPriority = priority || "medium";
+
+    priorityInputs.forEach((input) => {
+        input.checked = input.value === nextPriority;
+    });
+}
 
 function openTaskModal() {
     if (!modal) {
@@ -21,7 +31,9 @@ function setCreateMode() {
     modalSubmit.textContent = "Добавить задачу";
     titleInput.value = "";
     descriptionInput.value = "";
+    deadlineInput.value = "";
     doneInput.checked = false;
+    setPriority("medium");
     openTaskModal();
 }
 
@@ -33,7 +45,9 @@ function setEditMode(button) {
     modalSubmit.textContent = "Сохранить изменения";
     titleInput.value = button.dataset.taskTitle || "";
     descriptionInput.value = button.dataset.taskDescription || "";
+    deadlineInput.value = button.dataset.taskDeadline || "";
     doneInput.checked = button.dataset.taskDone === "true";
+    setPriority(button.dataset.taskPriority);
     openTaskModal();
 }
 
