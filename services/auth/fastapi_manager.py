@@ -10,10 +10,18 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from database import get_db
 from models.users import User
 
+from fastapi_users.password import PasswordHelper
+from pwdlib import PasswordHash, exceptions
+from pwdlib .hashers.argon2 import Argon2Hasher
 
 dotenv.load_dotenv()
 SECRET = os.getenv("SECRET_KEY")
 
+password_hash = PasswordHash((
+    Argon2Hasher(),
+))
+
+password_helper = PasswordHelper(password_hash)
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET
@@ -28,10 +36,14 @@ async def get_user_db(session=Depends(get_db)):
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):
-    yield UserManager(user_db)
+    yield UserManager(user_db, password_helper)
 
 
-cookie_transport = CookieTransport(cookie_name="boba", cookie_max_age=3600)
+cookie_transport = CookieTransport(
+    cookie_name="boba",
+    cookie_max_age=3600,
+    cookie_secure=False,
+)
 
 
 def get_jwt_strategy() -> JWTStrategy:

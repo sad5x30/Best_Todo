@@ -5,29 +5,159 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Best ToDo</title>
     <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <script src="{{ url_for('static', path='tasks.js') }}" defer></script>
 </head>
 <body>
     <header class="home-header">
         <nav class="home-nav">
-            <div class="brand-name">Best ToDo</div>
-            <a class="button-link primary" href="/login">Войти</a>
-            <a class="button-link" href="/register">Регистрация</a>
+            <a class="brand-name" href="/" aria-label="Best ToDo">
+                <span class="brand-name-mark">✓</span>
+                <span>Best ToDo</span>
+            </a>
+
+            <div class="nav-actions" aria-label="Навигация">
+                {% if user %}
+                <form action="/logout" method="post">
+                    <button class="nav-link nav-button" type="submit">Выйти</button>
+                </form>
+                {% else %}
+                <a class="nav-link" href="/login">Войти</a>
+                <a class="button-link primary" href="/register">Регистрация</a>
+                {% endif %}
+            </div>
         </nav>
     </header>
 
-    <main class="home-shell">
+    <main class="home-shell {% if user %}task-shell{% endif %}">
+        {% if not user %}
         <section class="home-panel">
             <div class="brand">
                 <span class="brand-mark">✓</span>
                 <span>Best ToDo</span>
             </div>
             <h1>Твои задачи, без суеты.</h1>
-            <p>Фронт для входа и регистрации уже подключен. Дальше сюда можно добавить личный кабинет со списком задач.</p>
+            <p>Зарегистрируйтесь, чтобы сохранять задачи, возвращаться к ним позже и держать день под контролем.</p>
             <div class="home-actions">
                 <a class="button-link primary" href="/login">Войти</a>
                 <a class="button-link" href="/register">Создать аккаунт</a>
             </div>
         </section>
+        {% else %}
+        <section class="task-hero" id="home">
+            <div>
+                <p class="eyebrow">Главный экран</p>
+                <h1>Привет, {{ user.username or user.email }}.</h1>
+                <p>Здесь живут твои задачи: добавляй, редактируй, закрывай и удаляй лишнее.</p>
+            </div>
+            <button class="add-task-button" type="button" data-open-task-modal>
+                <span>+</span>
+                Новая задача
+            </button>
+        </section>
+
+        <section class="task-board" aria-label="Список задач">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Чтение</p>
+                    <h2>Мои задачи</h2>
+                </div>
+                <span class="task-count">{{ tasks|length }} всего</span>
+            </div>
+
+            {% if tasks %}
+            <div class="task-list">
+                {% for task in tasks %}
+                <article class="task-card {% if task.is_done %}is-done{% endif %}">
+                    <form action="/tasks/{{ task.id }}/toggle" method="post" class="task-check-form">
+                        <button class="task-check" type="submit" aria-label="Сменить статус">
+                            {% if task.is_done %}✓{% endif %}
+                        </button>
+                    </form>
+
+                    <div class="task-content">
+                        <h3>{{ task.title }}</h3>
+                        {% if task.description %}
+                        <p>{{ task.description }}</p>
+                        {% else %}
+                        <p class="empty-description">Без описания</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="task-actions">
+                        <button
+                            class="icon-action"
+                            type="button"
+                            data-edit-task
+                            data-task-id="{{ task.id }}"
+                            data-task-title="{{ task.title }}"
+                            data-task-description="{{ task.description or '' }}"
+                            data-task-done="{{ 'true' if task.is_done else 'false' }}"
+                        >
+                            Изменить
+                        </button>
+                        <form action="/tasks/{{ task.id }}/delete" method="post">
+                            <button class="icon-action danger" type="submit">Удалить</button>
+                        </form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Пока пусто</h3>
+                <p>Создай первую задачу через кнопку ниже или через нижнюю навигацию.</p>
+                <button class="button-link primary" type="button" data-open-task-modal>Добавить задачу</button>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="profile-panel" id="profile">
+            <div>
+                <p class="eyebrow">Профиль</p>
+                <h2>{{ user.username }}</h2>
+                <p>{{ user.email }}</p>
+            </div>
+            <div class="profile-stats">
+                <span>{{ tasks|selectattr("is_done")|list|length }} готово</span>
+                <span>{{ tasks|rejectattr("is_done")|list|length }} в работе</span>
+            </div>
+        </section>
+        {% endif %}
     </main>
+
+    {% if user %}
+    <nav class="bottom-nav" aria-label="Нижняя навигация">
+        <a href="#home">Главная</a>
+        <button type="button" data-open-task-modal>Добавить</button>
+        <a href="#profile">Профиль</a>
+    </nav>
+
+    <dialog class="task-modal" data-task-modal>
+        <form action="/tasks" method="post" class="task-modal-card" data-task-form>
+            <button class="modal-close" type="button" data-close-task-modal aria-label="Закрыть">×</button>
+            <header>
+                <p class="eyebrow">Добавление задачи</p>
+                <h2 data-modal-title>Новая задача</h2>
+            </header>
+
+            <div class="field">
+                <label for="task-title">Название</label>
+                <input id="task-title" name="title" type="text" placeholder="Например: сделать проект" maxlength="120" required>
+            </div>
+
+            <div class="field">
+                <label for="task-description">Описание</label>
+                <textarea id="task-description" name="description" placeholder="Коротко опиши, что нужно сделать"></textarea>
+            </div>
+
+            <label class="done-toggle">
+                <input name="is_done" type="checkbox" value="true" data-done-input>
+                <span>Задача уже выполнена</span>
+            </label>
+
+            <button class="auth-button" type="submit" data-modal-submit>Добавить задачу</button>
+        </form>
+    </dialog>
+    {% endif %}
 </body>
 </html>
