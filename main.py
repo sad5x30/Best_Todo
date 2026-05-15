@@ -6,8 +6,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi_users import FastAPIUsers
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 
 from database import get_db
 from models.tasks import Task
@@ -56,11 +58,18 @@ async def home(
     request: Request,
     priority: str = Query("all"),
     status_filter: str = Query("all", alias="status"),
+    page: int = Query(1, ge=1),
     user: Optional[User] = Depends(current_user),
     session: AsyncSession = Depends(get_db),
 ):
     tasks = []
     all_tasks = []
+    per_page = 5
+    has_previous = False
+    has_next = False
+    total_tasks = False
+    count_query = False
+
     active_priority = priority if priority in TASK_PRIORITIES else "all"
     active_status = status_filter if status_filter in {"done", "active"} else "all"
 
@@ -80,10 +89,24 @@ async def home(
         elif active_status == "active":
             query = query.where(Task.is_done.is_(False))
 
+        count_query = select(func.count()).select_from(query.subquery())
+        total_tasks = await session.scalar(count_query)
+
+        total_pages = (total_tasks + per_page -1) // per_page
+
+        offset = (page - 1) * per_page
+
         result = await session.execute(
-            query.order_by(Task.is_done.asc(), Task.updated_at.desc())
+            query
+            .order_by(Task.is_done.asc(), Task.updated_at.desc())
+            .offset(offset)
+            .limit(per_page)
         )
+
         tasks = result.scalars().all()
+
+        has_previous = page > 1
+        has_next = page < total_pages
 
     return templates.TemplateResponse(
         request,
@@ -95,6 +118,10 @@ async def home(
             "active_priority": active_priority,
             "active_status": active_status,
             "priority_labels": TASK_PRIORITY_LABELS,
+            "page": page,
+            "has_previous": has_previous,
+            "has_next": has_next,
+            "total_pages": total_pages,
         },
     )
 

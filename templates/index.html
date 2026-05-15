@@ -153,6 +153,17 @@
                 <button class="button-link primary" type="button" data-open-task-modal>Добавить задачу</button>
             </div>
             {% endif %}
+            {% if total_pages > 1 %}
+            <div class="pagination">
+                {% if has_previous %}
+                    <a href="?page={{ page - 1 }}&priority={{ active_priority }}&status={{ active_status }}" class="button-link">Предыдущая</a>
+                {% endif %}
+                <span>Страница {{ page }}</span>
+                {% if has_next %}
+                    <a href="?page={{ page + 1 }}&priority={{ active_priority }}&status={{ active_status }}" class="button-link">Следующая</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </section>
 
         <section class="profile-panel" id="profile">
