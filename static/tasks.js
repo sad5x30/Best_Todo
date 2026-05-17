@@ -7,6 +7,83 @@ const descriptionInput = document.querySelector("#task-description");
 const deadlineInput = document.querySelector("#task-deadline");
 const doneInput = document.querySelector("[data-done-input]");
 const priorityInputs = document.querySelectorAll("[data-priority-input]");
+let realtimeReloadTimer = null;
+let realtimeSocket = null;
+
+function scheduleRealtimeReload(delay = 120) {
+    window.clearTimeout(realtimeReloadTimer);
+    realtimeReloadTimer = window.setTimeout(() => {
+        window.location.reload();
+    }, delay);
+}
+
+function connectTaskSocket() {
+    if (!taskForm || !window.WebSocket) {
+        return;
+    }
+
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    realtimeSocket = new WebSocket(`${protocol}://${window.location.host}/ws/tasks`);
+
+    realtimeSocket.addEventListener("message", (event) => {
+        let payload = null;
+
+        try {
+            payload = JSON.parse(event.data);
+        } catch {
+            return;
+        }
+
+        if (payload?.type === "task_changed") {
+            scheduleRealtimeReload();
+        }
+    });
+
+    realtimeSocket.addEventListener("close", () => {
+        window.setTimeout(connectTaskSocket, 1500);
+    });
+}
+
+function isTaskMutationForm(form) {
+    if (!(form instanceof HTMLFormElement)) {
+        return false;
+    }
+
+    const action = new URL(form.action, window.location.href);
+    return form.method.toLowerCase() === "post" && action.pathname.startsWith("/tasks");
+}
+
+document.addEventListener("submit", async (event) => {
+    const form = event.target;
+
+    if (!isTaskMutationForm(form)) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const submitter = event.submitter;
+    submitter?.setAttribute("disabled", "");
+
+    try {
+        const response = await fetch(form.action, {
+            method: "POST",
+            body: new FormData(form),
+            credentials: "same-origin",
+        });
+
+        if (!response.ok) {
+            throw new Error("Task request failed");
+        }
+
+        modal?.close();
+        scheduleRealtimeReload(900);
+    } catch {
+        form.submit();
+    } finally {
+        submitter?.removeAttribute("disabled");
+    }
+});
 
 function setPriority(priority) {
     const nextPriority = priority || "medium";
@@ -72,3 +149,5 @@ modal?.addEventListener("click", (event) => {
 modal?.addEventListener("cancel", () => {
     taskForm?.reset();
 });
+
+connectTaskSocket();

@@ -23,6 +23,7 @@ from services.tasks_cache import (
 from services.auth.auth_routes import router as auth_router
 
 from routes.tasks_route import router as tasks_router
+from routes.tasks_ws import router as tasks_ws_router
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -53,6 +54,7 @@ app.include_router(
 
 app.include_router(auth_router)
 app.include_router(tasks_router)
+app.include_router(tasks_ws_router)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -155,4 +157,3 @@ async def home(
             "tasks_cache": cached_stats,
         },
     )
-

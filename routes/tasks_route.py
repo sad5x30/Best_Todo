@@ -19,6 +19,7 @@ from typing import Optional
 from services.tasks_cache import (
     invalidate_task_stats,
 )
+from services.task_realtime import task_connection_manager
 
 from services.auth.fastapi_manager import auth_backend, get_user_manager
 
@@ -53,17 +54,18 @@ async def create_task(
 ):
     task_priority = priority if priority in TASK_PRIORITIES else "medium"
 
-    session.add(
-        Task(
-            title=title.strip(),
-            description=description.strip() or None,
-            priority=task_priority,
-            deadline=deadline,
-            user_id=user.id,
-        )
+    task = Task(
+        title=title.strip(),
+        description=description.strip() or None,
+        priority=task_priority,
+        deadline=deadline,
+        user_id=user.id,
     )
+    session.add(task)
     await session.commit()
+    await session.refresh(task)
     await invalidate_task_stats(user.id)
+    await task_connection_manager.broadcast_task_change(user.id, "create", task.id)
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -88,6 +90,7 @@ async def update_task(
 
     await session.commit()
     await invalidate_task_stats(user.id)
+    await task_connection_manager.broadcast_task_change(user.id, "update", task.id)
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -103,6 +106,7 @@ async def toggle_task(
 
     await session.commit()
     await invalidate_task_stats(user.id)
+    await task_connection_manager.broadcast_task_change(user.id, "toggle", task.id)
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -113,8 +117,10 @@ async def delete_task(
     session: AsyncSession = Depends(get_db),
 ):
     task = await get_owned_task(task_id, user, session)
+    deleted_task_id = task.id
     await session.delete(task)
     await session.commit()
     await invalidate_task_stats(user.id)
+    await task_connection_manager.broadcast_task_change(user.id, "delete", deleted_task_id)
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
 
