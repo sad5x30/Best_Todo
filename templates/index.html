@@ -65,19 +65,39 @@
             </div>
 
             <div class="task-filters" aria-label="Фильтры задач">
+                <form class="task-search" action="/" method="get" role="search" aria-label="Поиск задач">
+                    <input type="hidden" name="priority" value="{{ active_priority }}">
+                    <input type="hidden" name="status" value="{{ active_status }}">
+                    <label class="task-search-field" for="task-search">
+                        <span class="task-search-icon" aria-hidden="true"></span>
+                        <input
+                            id="task-search"
+                            name="search"
+                            type="search"
+                            value="{{ active_search }}"
+                            placeholder="Найти задачу по названию или описанию"
+                            autocomplete="off"
+                        >
+                    </label>
+                    <button class="task-search-submit" type="submit">Найти</button>
+                    {% if active_search %}
+                    <a class="task-search-reset" href="/?priority={{ active_priority }}&status={{ active_status }}">Сбросить</a>
+                    {% endif %}
+                </form>
+
                 <div class="filter-group">
                     <span>Приоритет</span>
-                    <a class="{% if active_priority == 'all' %}is-active{% endif %}" href="/?priority=all&status={{ active_status }}">Все</a>
-                    <a class="priority-low {% if active_priority == 'low' %}is-active{% endif %}" href="/?priority=low&status={{ active_status }}">Низкий</a>
-                    <a class="priority-medium {% if active_priority == 'medium' %}is-active{% endif %}" href="/?priority=medium&status={{ active_status }}">Средний</a>
-                    <a class="priority-high {% if active_priority == 'high' %}is-active{% endif %}" href="/?priority=high&status={{ active_status }}">Высокий</a>
+                    <a class="{% if active_priority == 'all' %}is-active{% endif %}" href="/?priority=all&status={{ active_status }}&search={{ active_search|urlencode }}">Все</a>
+                    <a class="priority-low {% if active_priority == 'low' %}is-active{% endif %}" href="/?priority=low&status={{ active_status }}&search={{ active_search|urlencode }}">Низкий</a>
+                    <a class="priority-medium {% if active_priority == 'medium' %}is-active{% endif %}" href="/?priority=medium&status={{ active_status }}&search={{ active_search|urlencode }}">Средний</a>
+                    <a class="priority-high {% if active_priority == 'high' %}is-active{% endif %}" href="/?priority=high&status={{ active_status }}&search={{ active_search|urlencode }}">Высокий</a>
                 </div>
 
                 <div class="filter-group">
                     <span>Статус</span>
-                    <a class="{% if active_status == 'all' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=all">Все</a>
-                    <a class="{% if active_status == 'active' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=active">Не выполнены</a>
-                    <a class="{% if active_status == 'done' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=done">Выполнены</a>
+                    <a class="{% if active_status == 'all' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=all&search={{ active_search|urlencode }}">Все</a>
+                    <a class="{% if active_status == 'active' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=active&search={{ active_search|urlencode }}">Не выполнены</a>
+                    <a class="{% if active_status == 'done' %}is-active{% endif %}" href="/?priority={{ active_priority }}&status=done&search={{ active_search|urlencode }}">Выполнены</a>
                 </div>
             </div>
 
@@ -156,11 +176,11 @@
             {% if total_pages > 1 %}
             <div class="pagination">
                 {% if has_previous %}
-                    <a href="?page={{ page - 1 }}&priority={{ active_priority }}&status={{ active_status }}" class="button-link">Предыдущая</a>
+                    <a href="?page={{ page - 1 }}&priority={{ active_priority }}&status={{ active_status }}&search={{ active_search|urlencode }}" class="button-link">Предыдущая</a>
                 {% endif %}
                 <span>Страница {{ page }}</span>
                 {% if has_next %}
-                    <a href="?page={{ page + 1 }}&priority={{ active_priority }}&status={{ active_status }}" class="button-link">Следующая</a>
+                    <a href="?page={{ page + 1 }}&priority={{ active_priority }}&status={{ active_status }}&search={{ active_search|urlencode }}" class="button-link">Следующая</a>
                 {% endif %}
             </div>
             {% endif %}

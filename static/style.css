@@ -542,6 +542,102 @@ header {
     background: #fbfdff;
 }
 
+.task-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.task-search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.task-search-field input {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 0.9rem 0 2.55rem;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.task-search-field input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
+}
+
+.task-search-field input::placeholder {
+    color: #9aa4b5;
+    font-weight: 700;
+}
+
+.task-search-icon {
+    position: absolute;
+    left: 0.95rem;
+    width: 15px;
+    height: 15px;
+    border: 2px solid #94a3b8;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.task-search-icon::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    bottom: -5px;
+    width: 8px;
+    height: 2px;
+    border-radius: 999px;
+    background: #94a3b8;
+    transform: rotate(45deg);
+}
+
+.task-search-submit,
+.task-search-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 0.95rem;
+    background: #fff;
+    color: #354156;
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.task-search-submit {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16);
+}
+
+.task-search-submit:hover {
+    border-color: var(--primary-dark);
+    background: var(--primary-dark);
+}
+
+.task-search-reset:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: var(--primary);
+    text-decoration: none;
+}
+
 .filter-group {
     display: flex;
     flex-wrap: wrap;
@@ -1049,6 +1145,15 @@ header {
 
     .filter-group {
         align-items: stretch;
+    }
+
+    .task-search {
+        grid-template-columns: 1fr;
+    }
+
+    .task-search-submit,
+    .task-search-reset {
+        width: 100%;
     }
 
     .filter-group > span {
