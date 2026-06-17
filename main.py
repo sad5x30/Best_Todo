@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, or_
 
 from database import get_db
-from models.tasks import Task
+from models.tasks import Task, TaskHistory
 from models.users import User
 from services.auth.auth_schemas import UserCreate, UserRead
 from services.auth.fastapi_manager import auth_backend, get_user_manager
@@ -34,6 +34,13 @@ TASK_PRIORITY_LABELS = {
     "low": "Низкий",
     "medium": "Средний",
     "high": "Высокий",
+}
+
+TASK_HISTORY_METHOD_LABELS = {
+    "create": "Создание",
+    "update": "Изменение",
+    "toggle": "Смена статуса",
+    "delete": "Удаление",
 }
 
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
@@ -75,6 +82,7 @@ async def home(
     total_tasks = 0
     total_pages = 1
     cached_stats = None
+    task_history = []
 
     active_priority = priority if priority in TASK_PRIORITIES else "all"
     active_status = status_filter if status_filter in {"done", "active"} else "all"
@@ -134,10 +142,16 @@ async def home(
         )
 
         tasks = result.scalars().all()
+        history_result = await session.execute(
+            select(TaskHistory)
+            .where(TaskHistory.user_id == user.id)
+            .order_by(TaskHistory.created_at.desc())
+            .limit(12)
+        )
+        task_history = history_result.scalars().all()
 
         has_previous = page > 1
         has_next = page < total_pages
-
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -149,6 +163,8 @@ async def home(
             "active_status": active_status,
             "active_search": active_search,
             "priority_labels": TASK_PRIORITY_LABELS,
+            "history_method_labels": TASK_HISTORY_METHOD_LABELS,
+            "task_history": task_history,
             "page": page,
             "has_previous": has_previous,
             "has_next": has_next,

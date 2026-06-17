@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.users import User
-from models.tasks import Task
+from models.tasks import Task, TaskHistory
 
 from database import get_db 
 from datetime import datetime, date
@@ -24,6 +24,23 @@ from services.task_realtime import task_connection_manager
 from services.auth.fastapi_manager import auth_backend, get_user_manager
 
 router = APIRouter()
+
+
+def add_task_history(
+    session: AsyncSession,
+    user_id: int,
+    method: str,
+    task_title: str,
+    task_id: int | None = None,
+):
+    session.add(
+        TaskHistory(
+            method=method,
+            task_id=task_id,
+            task_title=task_title,
+            user_id=user_id,
+        )
+    )
 
 
 async def get_owned_task(
@@ -62,8 +79,9 @@ async def create_task(
         user_id=user.id,
     )
     session.add(task)
+    await session.flush()
+    add_task_history(session, user.id, "create", task.title, task.id)
     await session.commit()
-    await session.refresh(task)
     await invalidate_task_stats(user.id)
     await task_connection_manager.broadcast_task_change(user.id, "create", task.id)
     return RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
@@ -87,6 +105,7 @@ async def update_task(
     task.deadline = deadline
     task.is_done = is_done
     task.updated_at = datetime.utcnow()
+    add_task_history(session, user.id, "update", task.title, task.id)
 
     await session.commit()
     await invalidate_task_stats(user.id)
@@ -103,6 +122,7 @@ async def toggle_task(
     task = await get_owned_task(task_id, user, session)
     task.is_done = not task.is_done
     task.updated_at = datetime.utcnow()
+    add_task_history(session, user.id, "toggle", task.title, task.id)
 
     await session.commit()
     await invalidate_task_stats(user.id)
@@ -118,6 +138,8 @@ async def delete_task(
 ):
     task = await get_owned_task(task_id, user, session)
     deleted_task_id = task.id
+    deleted_task_title = task.title
+    add_task_history(session, user.id, "delete", deleted_task_title)
     await session.delete(task)
     await session.commit()
     await invalidate_task_stats(user.id)

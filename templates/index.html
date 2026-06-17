@@ -186,6 +186,41 @@
             {% endif %}
         </section>
 
+        <section class="history-panel" id="history">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">История</p>
+                    <h2>Действия с задачами</h2>
+                </div>
+                <span class="task-count">{{ task_history|length }} записей</span>
+            </div>
+
+            {% if task_history %}
+            <div class="history-list">
+                {% for item in task_history %}
+                <article class="history-item">
+                    <span class="history-method history-{{ item.method }}">
+                        {{ history_method_labels.get(item.method, item.method) }}
+                    </span>
+                    <div>
+                        <h3>{{ item.task_title }}</h3>
+                        {% if item.created_at %}
+                        <time datetime="{{ item.created_at.isoformat() }}">
+                            {{ item.created_at.strftime("%Y-%m-%d %H:%M") }}
+                        </time>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state compact">
+                <h3>История пока пустая</h3>
+                <p>Создай, измени или удали задачу, и действие появится здесь.</p>
+            </div>
+            {% endif %}
+        </section>
+
         <section class="profile-panel" id="profile">
             <div>
                 <p class="eyebrow">Профиль</p>
@@ -204,7 +239,7 @@
     <nav class="bottom-nav" aria-label="Нижняя навигация">
         <a href="#home">Главная</a>
         <button type="button" data-open-task-modal>Добавить</button>
-        <a href="#profile">Профиль</a>
+        <a href="#history">История</a>
     </nav>
 
     <dialog class="task-modal" data-task-modal>
