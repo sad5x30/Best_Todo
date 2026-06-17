@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 
-from datetime import datetime
+from datetime import datetime, UTC
 from database import Base
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
@@ -13,6 +13,6 @@ class User(SQLAlchemyBaseUserTable, Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now(UTC))
 
     tasks = relationship("Task", back_populates="user", cascade="all, delete")

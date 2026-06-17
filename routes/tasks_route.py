@@ -69,10 +69,14 @@ async def create_task(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_db),
 ):
+    clean_title = title.strip()
+    if not clean_title:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title cannot be empty")
+    
     task_priority = priority if priority in TASK_PRIORITIES else "medium"
 
     task = Task(
-        title=title.strip(),
+        title=clean_title,
         description=description.strip() or None,
         priority=task_priority,
         deadline=deadline,
@@ -98,8 +102,12 @@ async def update_task(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_db),
 ):
+    clean_title = title.strip()
+    if not clean_title:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title cannot be empty")
+    
     task = await get_owned_task(task_id, user, session)
-    task.title = title.strip()
+    task.title = clean_title
     task.description = description.strip() or None
     task.priority = priority if priority in TASK_PRIORITIES else "medium"
     task.deadline = deadline

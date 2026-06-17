@@ -97,16 +97,28 @@ async def home(
         cached_stats = await get_cached_task_stats(user.id)
 
         if cached_stats is None:
+            stats_query = select(
+                func.count(Task.id).label("total"),
+                func.count().filter(Task.is_done.is_(True)).label("done"),
+                func.count().filter(Task.is_done.is_(False)).label("active"),
+                func.count().filter(Task.priority == "high").label("high"),
+                func.count().filter(Task.priority == "medium").label("medium"),
+                func.count().filter(Task.priority == "low").label("low"),
+            ).where(Task.user_id == user.id)
+
+            stats_result = await session.execute(stats_query)
+            stats = stats_result.one()
+
             cached_stats = {
-                "total": len(all_tasks),
-                "done": sum(1 for task in all_tasks if task.is_done),
-                "active": sum(1 for task in all_tasks if not task.is_done),
-                "high": sum(1 for task in all_tasks if task.priority == "high"),
-                "medium": sum(1 for task in all_tasks if task.priority == "medium"),
-                "low": sum(1 for task in all_tasks if task.priority == "low"),
+                "total": stats.total,
+                "done": stats.done,
+                "active": stats.active,
+                "high": stats.high,
+                "medium": stats.medium,
+                "low": stats.low,
             }
 
-            await set_cached_task_stats(user.id, cached_stats)
+        await set_cached_task_stats(user.id, cached_stats)
 
         query = select(Task).where(Task.user_id == user.id)
 

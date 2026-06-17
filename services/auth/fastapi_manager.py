@@ -40,9 +40,11 @@ async def get_user_manager(user_db=Depends(get_user_db)):
 
 
 cookie_transport = CookieTransport(
-    cookie_name="boba",
+    cookie_name="best_cookies",
     cookie_max_age=3600,
-    cookie_secure=False,
+    cookie_secure=True,
+    cookie_httponly=True,
+    cookie_samesite="lax",
 )
 
 

@@ -130,5 +130,5 @@ async def test_logout_redirects_and_clears_auth_cookie():
 
         assert response.status_code == 303
         assert response.headers["location"] == "/"
-        assert "boba=" in response.headers["set-cookie"]
+        assert "best_cookies=" in response.headers["set-cookie"]
         assert "Max-Age=0" in response.headers["set-cookie"]
