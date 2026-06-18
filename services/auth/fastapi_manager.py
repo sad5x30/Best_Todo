@@ -16,6 +16,7 @@ from pwdlib .hashers.argon2 import Argon2Hasher
 
 dotenv.load_dotenv()
 SECRET = os.getenv("SECRET_KEY")
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 
 password_hash = PasswordHash((
     Argon2Hasher(),
@@ -42,7 +43,7 @@ async def get_user_manager(user_db=Depends(get_user_db)):
 cookie_transport = CookieTransport(
     cookie_name="best_cookies",
     cookie_max_age=3600,
-    cookie_secure=True,
+    cookie_secure=COOKIE_SECURE,
     cookie_httponly=True,
     cookie_samesite="lax",
 )

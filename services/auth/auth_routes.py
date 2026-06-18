@@ -27,5 +27,5 @@ async def auth_register_page(request: Request):
 @router.post("/logout", response_class=HTMLResponse)
 async def logout():
     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    response.delete_cookie("boba")
+    response.delete_cookie("best_cookies")
     return response
