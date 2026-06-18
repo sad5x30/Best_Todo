@@ -12,6 +12,11 @@
 * **Testing:** Pytest (Автоматическое тестирование)
 
 ---
+## скрины
+![Главный экран](screenshots/main_page.png)
+![логин](screenshots/login.png)
+![регестрация](screenshots/register.png)
+![создание задачи](screenshots/creating_task.png)
 
 ## 📂 Структура проекта
 
