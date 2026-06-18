@@ -13,7 +13,7 @@
 
 ---
 ## скрины
-![Главный экран](screenshots/main_page.png)
+![Главный экран](screenshots/home_page.png)
 ![логин](screenshots/login.png)
 ![регестрация](screenshots/register.png)
 ![создание задачи](screenshots/creating_task.png)
